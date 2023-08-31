@@ -18,6 +18,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.util.Date;
 
 import conexao.Conexao;
 import net.proteanit.sql.DbUtils;
@@ -61,6 +63,7 @@ public class TelaOS extends JInternalFrame {
 	private String tipo = "";
 	private JRadioButton rbtOs;
 	private JComboBox cboOsSit;
+	private JRadioButton rbtOr;
 	/**
 	 * Launch the application.
 	 */
@@ -108,7 +111,7 @@ public class TelaOS extends JInternalFrame {
 		panel.add(txtData);
 		txtData.setColumns(10);
 		
-		JRadioButton rbtOr = new JRadioButton("Orçamento");
+		 rbtOr = new JRadioButton("Orçamento");
 		rbtOr.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				tipo = "Orçamento";
@@ -238,6 +241,7 @@ public class TelaOS extends JInternalFrame {
 		getContentPane().add(txtOsTec);
 		
 		txtOsValor = new JTextField();
+		txtOsValor.setText("0");
 		txtOsValor.setColumns(10);
 		txtOsValor.setBounds(516, 342, 230, 20);
 		getContentPane().add(txtOsValor);
@@ -260,6 +264,7 @@ public class TelaOS extends JInternalFrame {
 		JButton btnOsBuscar = new JButton("");
 		btnOsBuscar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+			 pesquisar();
 			}
 		});
 		btnOsBuscar.setIcon(new ImageIcon(TelaOS.class.getResource("/icones/read.png")));
@@ -323,7 +328,7 @@ public class TelaOS extends JInternalFrame {
 		  statement.setString(4, txtOsDef.getText());
 		  statement.setString(5, txtOsSer.getText());
 		  statement.setString(6, txtOsTec.getText());
-		  statement.setString(7, txtOsValor.getText());
+		  statement.setString(7, txtOsValor.getText().replace(",","."));
 		  statement.setString(8, txtCliId.getText());
 		  
 		  if(txtCliId.getText().isEmpty() || txtOsEquip.getText().isEmpty() || txtOsDef.getText().isEmpty()) {
@@ -362,4 +367,41 @@ public class TelaOS extends JInternalFrame {
 		txtOsTec.setText(null);
 	}
 	
+	private void pesquisar() {
+		String numero = JOptionPane.showInputDialog("Número da OS");
+		String sql ="select * from tbos  where os =?";
+		
+		try {
+			connection = Conexao.conection();
+			statement =connection.prepareStatement(sql);
+			statement.setString(1, numero);
+		   result =	statement.executeQuery();
+		  if(result.next()) {
+				DateFormat formatador = DateFormat.getDateInstance(DateFormat.SHORT);
+
+			  txtOs.setText(result.getString(1));
+			  txtData.setText(formatador.format(result.getDate(2)) );
+			  String  tipo = result.getString(3);
+			  if(tipo.equals("OS")) {
+				  rbtOs.setSelected(true);
+				  this.tipo = "OS";
+			  }else {
+				  rbtOr.setSelected(true);
+				  this.tipo = "Orçamento";
+			  }
+			  cboOsSit.setSelectedItem(result.getString(4));
+			  txtOsEquip.setText(result.getString(5));
+			  txtOsDef.setText(result.getString(6));
+			  txtOsSer.setText(result.getString(7));
+			  txtOsTec.setText(result.getString(8));
+			  txtOsValor.setText(result.getString(9).replace(".", ","));
+			  txtCliId.setText(result.getString(10));
+			  
+		  }else {
+			  JOptionPane.showMessageDialog(null,"OS não cadastrada");
+		  }
+		}catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
 }
