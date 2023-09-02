@@ -64,6 +64,7 @@ public class TelaOS extends JInternalFrame {
 	private JRadioButton rbtOs;
 	private JComboBox cboOsSit;
 	private JRadioButton rbtOr;
+	private JButton btnOSAdicionar;
 	/**
 	 * Launch the application.
 	 */
@@ -250,7 +251,7 @@ public class TelaOS extends JInternalFrame {
 		lblNewLabel_4_2_1_1.setBounds(454, 344, 62, 16);
 		getContentPane().add(lblNewLabel_4_2_1_1);
 		
-		JButton btnOSAdicionar = new JButton("");
+		 btnOSAdicionar = new JButton("");
 		btnOSAdicionar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				adicionar();
@@ -275,6 +276,7 @@ public class TelaOS extends JInternalFrame {
 		JButton btnOsEditar = new JButton("");
 		btnOsEditar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				update();
 			}
 		});
 		btnOsEditar.setIcon(new ImageIcon(TelaOS.class.getResource("/icones/update.png")));
@@ -285,6 +287,7 @@ public class TelaOS extends JInternalFrame {
 		JButton btnOsDeletar = new JButton("");
 		btnOsDeletar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				delete();
 			}
 		});
 		btnOsDeletar.setIcon(new ImageIcon(TelaOS.class.getResource("/icones/delete.png")));
@@ -365,6 +368,11 @@ public class TelaOS extends JInternalFrame {
 		txtOsDef.setText(null);
 		txtOsEquip.setText(null);
 		txtOsTec.setText(null);
+		btnOSAdicionar.setEnabled(true);
+		txtCliPesquisar.setEnabled(true);
+		txtOs.setText(null);
+		txtData.setText(null);
+		table.setVisible(true);
 	}
 	
 	private void pesquisar() {
@@ -396,12 +404,77 @@ public class TelaOS extends JInternalFrame {
 			  txtOsTec.setText(result.getString(8));
 			  txtOsValor.setText(result.getString(9).replace(".", ","));
 			  txtCliId.setText(result.getString(10));
+			  txtCliPesquisar.setEditable(false);
+			  btnOSAdicionar.setEnabled(false);
+			  table.setVisible(false);
 			  
 		  }else {
-			  JOptionPane.showMessageDialog(null,"OS não cadastrada");
+			  JOptionPane.showMessageDialog(null,"OS não encontrada");
 		  }
 		}catch (Exception e) {
 			// TODO: handle exception
+			 JOptionPane.showMessageDialog(null,e);
+			 System.out.println(e);
+		}
+	}
+	private void update() {
+		System.out.println("Clicou");
+		String sql ="update tbos set  tipo = ?, situacao= ?, equipamento = ?,defeito =  ?, servico = ?, tecnico = ? , valor = ?    where os =?";
+		
+		try {
+			connection = Conexao.conection();
+		  statement	=connection.prepareStatement(sql);
+		  statement.setString(1,tipo);
+		  statement.setString(2,cboOsSit.getSelectedItem().toString());
+		  statement.setString(3, txtOsEquip.getText());
+		  statement.setString(4, txtOsDef.getText());
+		  statement.setString(5, txtOsSer.getText());
+		  statement.setString(6, txtOsTec.getText());
+		  statement.setString(7, txtOsValor.getText().replace(",","."));
+		  statement.setString(8, txtOs.getText());
+		  
+		  if(txtCliId.getText().isEmpty() || txtOsEquip.getText().isEmpty() || txtOsDef.getText().isEmpty()) {
+			  JOptionPane.showMessageDialog(null,"Preencha todos os campos!");
+			  return;
+		  }
+		int insert =  statement.executeUpdate();
+		if(insert > 0) {
+			JOptionPane.showMessageDialog(null, "Dados Salvos!!");	
+			limpar();
+		}else {
+			JOptionPane.showMessageDialog(null, "Problema ao salvar!!");	
+			
+		}
+		
+		
+		}catch (Exception e) {
+			// TODO: handle exception
+			JOptionPane.showMessageDialog(null, e);	
+			
+		}
+
+	}
+	private void delete() {
+		String sql = "delete from tbos where os = ?";
+		int opcao = JOptionPane.showConfirmDialog(null, "Tem certeza que deseja excluir o OS?","Deletar", JOptionPane.YES_NO_OPTION);
+		if(opcao == JOptionPane.YES_OPTION) {
+			try {
+				connection	= Conexao.conection();
+				statement	= connection.prepareStatement(sql);
+				statement.setInt(1,  Integer.parseInt(txtOs.getText()));
+				int exec = statement.executeUpdate();
+				if ( exec > 0) {
+					JOptionPane.showMessageDialog(null, "OS deletado!!");
+					limpar();
+					btnOSAdicionar.setEnabled(true);
+				} else {
+					JOptionPane.showMessageDialog(null, "OS não deletado!!", "Erro!", JOptionPane.ERROR_MESSAGE);
+
+				}
+			}catch (Exception e) {
+				// TODO: handle exception
+				JOptionPane.showMessageDialog(null, e);
+			}
 		}
 	}
 }
